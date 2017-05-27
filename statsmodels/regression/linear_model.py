@@ -1580,6 +1580,8 @@ class RegressionResults(base.LikelihoodModelResults):
                 idx = lrange(k_params)
                 idx.pop(const_idx)
                 mat = mat[idx]  # remove constant
+                if mat.size == 0:  # see  #3642
+                    return np.nan
             ft = self.f_test(mat)
             # using backdoor to set another attribute that we already have
             self._cache['f_pvalue'] = ft.pvalue
@@ -2240,9 +2242,11 @@ class RegressionResults(base.LikelihoodModelResults):
             weights_func = kwds.get('weights_func', sw.weights_bartlett)
             res.cov_kwds['weights_func'] = weights_func
             if groups is not None:
+                groups = np.asarray(groups)
                 tt = (np.nonzero(groups[:-1] != groups[1:])[0] + 1).tolist()
                 nobs_ = len(groups)
             elif time is not None:
+                time = np.asarray(time)
                 # TODO: clumsy time index in cov_nw_panel
                 tt = (np.nonzero(time[1:] < time[:-1])[0] + 1).tolist()
                 nobs_ = len(time)
